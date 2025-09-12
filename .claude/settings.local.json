@@ -15,7 +15,12 @@
       "Bash(git branch:*)",
       "Bash(git remote add:*)",
       "Bash(git add:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(pkill:*)",
+      "Read(//var/folders/ql/0rm9ylws75570vzbyd2wcdyr0000gn/T/TemporaryItems/NSIRD_screencaptureui_ullaiQ/**)"
     ],
     "deny": [],
     "ask": []

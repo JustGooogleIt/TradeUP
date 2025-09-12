@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Vapi from '@vapi-ai/web';
 import './VideoLearningInterface.css';
 
 interface Message {
@@ -35,12 +34,9 @@ export const VideoLearningInterface: React.FC<VideoLearningInterfaceProps> = ({
   const [hasInteracted, setHasInteracted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
-  const [isVoiceActive, setIsVoiceActive] = useState(false);
-  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   
   const playerRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const vapiRef = useRef<any>(null);
 
   useEffect(() => {
     // Load YouTube IFrame API
@@ -54,59 +50,7 @@ export const VideoLearningInterface: React.FC<VideoLearningInterfaceProps> = ({
     } else {
       initializePlayer();
     }
-
-    // Initialize VAPI
-    initializeVapi();
   }, []);
-
-  const initializeVapi = () => {
-    try {
-      // Using the provided API key as public key
-      vapiRef.current = new Vapi("48de5348-bc59-433c-a0e5-d873e5db5891");
-      
-      // Set up event listeners
-      vapiRef.current.on('call-start', () => {
-        setIsVoiceActive(true);
-        console.log('VAPI call started');
-      });
-
-      vapiRef.current.on('call-end', () => {
-        setIsVoiceActive(false);
-        console.log('VAPI call ended');
-      });
-
-      vapiRef.current.on('speech-start', () => {
-        console.log('User started speaking');
-      });
-
-      vapiRef.current.on('speech-end', () => {
-        console.log('User stopped speaking');
-      });
-
-      vapiRef.current.on('message', (message: any) => {
-        if (message.type === 'transcript' && message.transcriptType === 'final') {
-          // Handle user voice input
-          const userMessage: Message = {
-            id: Date.now().toString(),
-            content: message.transcript,
-            isUser: true,
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, userMessage]);
-          setHasInteracted(true);
-        }
-      });
-
-      vapiRef.current.on('error', (error: any) => {
-        console.error('VAPI error:', error);
-        setIsVoiceActive(false);
-      });
-
-      setIsVoiceEnabled(true);
-    } catch (error) {
-      console.error('Failed to initialize VAPI:', error);
-    }
-  };
 
   const initializePlayer = () => {
     try {
@@ -274,31 +218,6 @@ export const VideoLearningInterface: React.FC<VideoLearningInterfaceProps> = ({
     }
   };
 
-  const startVoiceCall = async () => {
-    if (!vapiRef.current || isVoiceActive) return;
-    
-    try {
-      // Start call with the provided assistant ID
-      await vapiRef.current.start("908bc7ed-cc26-4ca7-94ed-19d5c54cddb8");
-    } catch (error) {
-      console.error('Failed to start voice call:', error);
-    }
-  };
-
-  const endVoiceCall = () => {
-    if (vapiRef.current && isVoiceActive) {
-      vapiRef.current.stop();
-    }
-  };
-
-  const toggleVoice = () => {
-    if (isVoiceActive) {
-      endVoiceCall();
-    } else {
-      startVoiceCall();
-    }
-  };
-
   return (
     <div className="video-learning-container">
       <div className="video-section">
@@ -397,19 +316,10 @@ export const VideoLearningInterface: React.FC<VideoLearningInterfaceProps> = ({
               onKeyPress={handleKeyPress}
               placeholder="Ask a question about the video content..."
               className="message-input"
-              disabled={isVoiceActive}
             />
             <button 
-              onClick={toggleVoice}
-              disabled={!isVoiceEnabled}
-              className={`voice-button ${isVoiceActive ? 'active' : ''}`}
-              title={isVoiceActive ? 'Stop Voice Chat' : 'Start Voice Chat'}
-            >
-              {isVoiceActive ? '🔊' : '🎤'}
-            </button>
-            <button 
               onClick={handleSendMessage}
-              disabled={!inputMessage.trim() || isLoading || isVoiceActive}
+              disabled={!inputMessage.trim() || isLoading}
               className="send-button"
             >
               Send

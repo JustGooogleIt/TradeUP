@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { analyzeCompatibility, generateSkillJourney } from '../utils/aiProcessor';
@@ -6,6 +6,7 @@ import { getSkillsByTrade } from '../utils/skillsData';
 import SkillJourneyMap from '../components/SkillJourneyMap';
 import { VideoLearningInterface } from '../components/VideoLearningInterface';
 import { demoController, sampleUserProfile } from '../utils/demoData';
+import Vapi from '@vapi-ai/web';
 
 const Results: React.FC = () => {
   const navigate = useNavigate();
@@ -28,6 +29,10 @@ const Results: React.FC = () => {
   const [learningProgress, setLearningProgress] = useState<{ [skillName: string]: number }>({});
   const [showVideoInterface, setShowVideoInterface] = useState(false);
   const [showToast, setShowToast] = useState<string | null>(null);
+  const [isVoiceActive, setIsVoiceActive] = useState(false);
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
+  
+  const vapiRef = useRef<any>(null);
 
   useEffect(() => {
     const analyzeResults = async () => {
@@ -84,6 +89,62 @@ const Results: React.FC = () => {
     analyzeResults();
   }, [selectedTrade, resumeSkills, questionAnswers, setCompatibilityScore, setSkillGaps]);
 
+  useEffect(() => {
+    // Initialize VAPI
+    initializeVapi();
+  }, []);
+
+  const initializeVapi = () => {
+    try {
+      console.log('Initializing VAPI...');
+      // Using the provided API key as public key
+      vapiRef.current = new Vapi("48de5348-bc59-433c-a0e5-d873e5db5891");
+      
+      // Set up event listeners
+      vapiRef.current.on('call-start', () => {
+        setIsVoiceActive(true);
+        setShowToast('🎤 Voice assistant activated! Ask me about your trades career.');
+        setTimeout(() => setShowToast(null), 3000);
+        console.log('VAPI call started');
+      });
+
+      vapiRef.current.on('call-end', () => {
+        setIsVoiceActive(false);
+        setShowToast('🔇 Voice chat ended.');
+        setTimeout(() => setShowToast(null), 2000);
+        console.log('VAPI call ended');
+      });
+
+      vapiRef.current.on('speech-start', () => {
+        console.log('User started speaking');
+      });
+
+      vapiRef.current.on('speech-end', () => {
+        console.log('User stopped speaking');
+      });
+
+      vapiRef.current.on('message', (message: any) => {
+        if (message.type === 'transcript' && message.transcriptType === 'final') {
+          setShowToast(`📝 You said: "${message.transcript}"`);
+          setTimeout(() => setShowToast(null), 4000);
+        }
+      });
+
+      vapiRef.current.on('error', (error: any) => {
+        console.error('VAPI error:', error);
+        setIsVoiceActive(false);
+        setShowToast('❌ Voice chat error. Check your connection and try again.');
+        setTimeout(() => setShowToast(null), 3000);
+      });
+
+      setIsVoiceEnabled(true);
+    } catch (error) {
+      console.error('Failed to initialize VAPI:', error);
+      setShowToast('❌ Voice assistant unavailable. Please check your internet connection.');
+      setTimeout(() => setShowToast(null), 3000);
+    }
+  };
+
   const getMotivationalMessage = (score: number) => {
     if (score >= 80) return "Excellent match! You're well-positioned for this career transition.";
     if (score >= 60) return "Great potential! With focused learning, you'll be ready soon.";
@@ -139,6 +200,36 @@ const Results: React.FC = () => {
     }
   };
 
+  const startVoiceCall = async () => {
+    if (!vapiRef.current || isVoiceActive) return;
+    
+    try {
+      console.log('Starting VAPI call...');
+      setShowToast('🔄 Connecting to voice assistant...');
+      // Start call with the provided assistant ID
+      await vapiRef.current.start("908bc7ed-cc26-4ca7-94ed-19d5c54cddb8");
+    } catch (error) {
+      console.error('Failed to start voice call:', error);
+      setIsVoiceActive(false);
+      setShowToast('❌ Failed to connect to voice assistant. Please check your internet connection.');
+      setTimeout(() => setShowToast(null), 4000);
+    }
+  };
+
+  const endVoiceCall = () => {
+    if (vapiRef.current && isVoiceActive) {
+      vapiRef.current.stop();
+    }
+  };
+
+  const toggleVoice = () => {
+    if (isVoiceActive) {
+      endVoiceCall();
+    } else {
+      startVoiceCall();
+    }
+  };
+
   const isSkillCompleted = (skillName: string) => completedSkills.includes(skillName);
   
   const getNextRecommendedSkill = () => {
@@ -163,14 +254,54 @@ const Results: React.FC = () => {
         {/* Header Section */}
         <div className="card mb-4">
           <div style={{ padding: '3rem', textAlign: 'center' }}>
-            <h1 style={{ 
-              fontSize: '2.5rem', 
-              fontWeight: 'bold', 
-              color: '#333',
-              marginBottom: '2rem'
-            }}>
-              Your Journey to Becoming an Electrician
-            </h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+              <div style={{ flex: 1 }}></div>
+              <h1 style={{ 
+                fontSize: '2.5rem', 
+                fontWeight: 'bold', 
+                color: '#333',
+                flex: 2,
+                textAlign: 'center'
+              }}>
+                Your Journey to Becoming an Electrician
+              </h1>
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                <button 
+                  onClick={toggleVoice}
+                  disabled={!isVoiceEnabled}
+                  style={{
+                    padding: '0.8rem',
+                    borderRadius: '50%',
+                    border: 'none',
+                    backgroundColor: isVoiceActive ? '#4CAF50' : '#667eea',
+                    color: 'white',
+                    fontSize: '1.2rem',
+                    cursor: isVoiceEnabled ? 'pointer' : 'not-allowed',
+                    transition: 'all 0.2s ease',
+                    minWidth: '50px',
+                    minHeight: '50px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    animation: isVoiceActive ? 'pulse 1.5s infinite' : 'none',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                  }}
+                  title={isVoiceActive ? 'Stop Voice Assistant' : 'Start Voice Assistant'}
+                  onMouseOver={(e) => {
+                    if (isVoiceEnabled) {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                  }}
+                >
+                  {isVoiceActive ? '🔊' : '🎤'}
+                </button>
+              </div>
+            </div>
             
             <div style={{ 
               display: 'flex', 
@@ -327,32 +458,34 @@ const Results: React.FC = () => {
                          gap.requiredLevel >= 6 ? 'Intermediate' : 'Basic'}
                       </div>
                       {!isCompleted && gap.skill === 'Circuit Design' && (
-                        <button 
-                          onClick={() => handleStartLearning(gap.skill)}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            borderRadius: '20px',
-                            border: 'none',
-                            backgroundColor: isCurrentlyLearning ? '#fbbf24' : '#667eea',
-                            color: 'white',
-                            fontSize: '0.8rem',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                          }}
-                          onMouseOver={(e) => {
-                            if (!isCurrentlyLearning) {
-                              e.currentTarget.style.backgroundColor = '#5a67d8';
-                            }
-                          }}
-                          onMouseOut={(e) => {
-                            if (!isCurrentlyLearning) {
-                              e.currentTarget.style.backgroundColor = '#667eea';
-                            }
-                          }}
-                        >
-                          {isCurrentlyLearning ? '📚 Learning' : '▶️ Start Learning'}
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <button 
+                            onClick={() => handleStartLearning(gap.skill)}
+                            style={{
+                              padding: '0.5rem 1rem',
+                              borderRadius: '20px',
+                              border: 'none',
+                              backgroundColor: isCurrentlyLearning ? '#fbbf24' : '#667eea',
+                              color: 'white',
+                              fontSize: '0.8rem',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseOver={(e) => {
+                              if (!isCurrentlyLearning) {
+                                e.currentTarget.style.backgroundColor = '#5a67d8';
+                              }
+                            }}
+                            onMouseOut={(e) => {
+                              if (!isCurrentlyLearning) {
+                                e.currentTarget.style.backgroundColor = '#667eea';
+                              }
+                            }}
+                          >
+                            {isCurrentlyLearning ? '📚 Learning' : '▶️ Start Learning'}
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -499,8 +632,16 @@ const Results: React.FC = () => {
 
       <style>{`
         @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.02); }
+          0%, 100% { 
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+          }
+          50% { 
+            transform: scale(1.02); 
+          }
+          70% {
+            box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+          }
         }
         
         @keyframes slideInFromRight {
