@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(tree:*)",
+      "Bash(npm install)",
+      "Bash(npm start)",
+      "Bash(PORT=3001 npm start)",
+      "Bash(curl:*)",
+      "Read(//var/folders/ql/0rm9ylws75570vzbyd2wcdyr0000gn/T/TemporaryItems/NSIRD_screencaptureui_Bi9mf8/**)",
+      "Read(//var/folders/ql/0rm9ylws75570vzbyd2wcdyr0000gn/T/TemporaryItems/NSIRD_screencaptureui_GQjr1U/**)",
+      "Bash(npm install:*)",
+      "WebSearch",
+      "Bash(git init:*)",
+      "Bash(git branch:*)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
