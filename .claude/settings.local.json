@@ -20,7 +20,8 @@
       "Bash(git push:*)",
       "Bash(git pull:*)",
       "Bash(pkill:*)",
-      "Read(//var/folders/ql/0rm9ylws75570vzbyd2wcdyr0000gn/T/TemporaryItems/NSIRD_screencaptureui_ullaiQ/**)"
+      "Read(//var/folders/ql/0rm9ylws75570vzbyd2wcdyr0000gn/T/TemporaryItems/NSIRD_screencaptureui_ullaiQ/**)",
+      "WebFetch(domain:docs.vapi.ai)"
     ],
     "deny": [],
     "ask": []

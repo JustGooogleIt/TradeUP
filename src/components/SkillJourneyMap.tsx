@@ -88,7 +88,7 @@ const SkillJourneyMap: React.FC<SkillJourneyMapProps> = ({
     };
 
     setTimeout(animateDrawing, 500);
-  }, [currentSkills, targetSkills, skillGaps]);
+  }, []); // Remove dependencies to prevent infinite loop - component will update when props change
 
   const getNodeColor = (status: SkillNode['status']) => {
     switch (status) {

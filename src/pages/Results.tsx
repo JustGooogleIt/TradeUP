@@ -87,9 +87,10 @@ const Results: React.FC = () => {
     };
 
     analyzeResults();
-  }, [selectedTrade, resumeSkills, questionAnswers, setCompatibilityScore, setSkillGaps]);
+  }, [selectedTrade, resumeSkills, questionAnswers]);
 
   useEffect(() => {
+    console.log('Results component mounted, initializing VAPI...');
     // Initialize VAPI
     initializeVapi();
   }, []);
@@ -97,8 +98,10 @@ const Results: React.FC = () => {
   const initializeVapi = () => {
     try {
       console.log('Initializing VAPI...');
+      console.log('VAPI package available:', typeof Vapi !== 'undefined');
       // Using the provided API key as public key
-      vapiRef.current = new Vapi("48de5348-bc59-433c-a0e5-d873e5db5891");
+      vapiRef.current = new Vapi("cbbb6a94-2f8b-4581-a493-699705680a47");
+      console.log('VAPI instance created:', !!vapiRef.current);
       
       // Set up event listeners
       vapiRef.current.on('call-start', () => {
@@ -223,6 +226,7 @@ const Results: React.FC = () => {
   };
 
   const toggleVoice = () => {
+    console.log('Voice toggle clicked! isVoiceActive:', isVoiceActive, 'isVoiceEnabled:', isVoiceEnabled);
     if (isVoiceActive) {
       endVoiceCall();
     } else {

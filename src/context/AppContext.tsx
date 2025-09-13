@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useMemo, useCallback } from 'react';
 import { AppState, AppContextType, Trade, QuestionAnswers, SkillGap } from '../types';
 
 const initialState: AppState = {
@@ -65,33 +65,49 @@ interface AppProviderProps {
 export function AppProvider({ children }: AppProviderProps) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  const contextValue: AppContextType = {
+  const setSelectedTrade = useCallback((trade: Trade | null) => {
+    dispatch({ type: 'SET_SELECTED_TRADE', payload: trade });
+  }, []);
+
+  const setResumeFile = useCallback((file: File | null) => {
+    dispatch({ type: 'SET_RESUME_FILE', payload: file });
+  }, []);
+
+  const setResumeSkills = useCallback((skills: string[]) => {
+    dispatch({ type: 'SET_RESUME_SKILLS', payload: skills });
+  }, []);
+
+  const updateQuestionAnswer = useCallback((key: keyof QuestionAnswers, value: string) => {
+    dispatch({ type: 'UPDATE_QUESTION_ANSWER', payload: { key, value } });
+  }, []);
+
+  const setCompatibilityScore = useCallback((score: number) => {
+    dispatch({ type: 'SET_COMPATIBILITY_SCORE', payload: score });
+  }, []);
+
+  const setSkillGaps = useCallback((gaps: SkillGap[]) => {
+    dispatch({ type: 'SET_SKILL_GAPS', payload: gaps });
+  }, []);
+
+  const setIsAnalyzing = useCallback((analyzing: boolean) => {
+    dispatch({ type: 'SET_IS_ANALYZING', payload: analyzing });
+  }, []);
+
+  const resetApp = useCallback(() => {
+    dispatch({ type: 'RESET_APP' });
+  }, []);
+
+  const contextValue: AppContextType = useMemo(() => ({
     ...state,
-    setSelectedTrade: (trade: Trade | null) => {
-      dispatch({ type: 'SET_SELECTED_TRADE', payload: trade });
-    },
-    setResumeFile: (file: File | null) => {
-      dispatch({ type: 'SET_RESUME_FILE', payload: file });
-    },
-    setResumeSkills: (skills: string[]) => {
-      dispatch({ type: 'SET_RESUME_SKILLS', payload: skills });
-    },
-    updateQuestionAnswer: (key: keyof QuestionAnswers, value: string) => {
-      dispatch({ type: 'UPDATE_QUESTION_ANSWER', payload: { key, value } });
-    },
-    setCompatibilityScore: (score: number) => {
-      dispatch({ type: 'SET_COMPATIBILITY_SCORE', payload: score });
-    },
-    setSkillGaps: (gaps: SkillGap[]) => {
-      dispatch({ type: 'SET_SKILL_GAPS', payload: gaps });
-    },
-    setIsAnalyzing: (analyzing: boolean) => {
-      dispatch({ type: 'SET_IS_ANALYZING', payload: analyzing });
-    },
-    resetApp: () => {
-      dispatch({ type: 'RESET_APP' });
-    },
-  };
+    setSelectedTrade,
+    setResumeFile,
+    setResumeSkills,
+    updateQuestionAnswer,
+    setCompatibilityScore,
+    setSkillGaps,
+    setIsAnalyzing,
+    resetApp,
+  }), [state, setSelectedTrade, setResumeFile, setResumeSkills, updateQuestionAnswer, setCompatibilityScore, setSkillGaps, setIsAnalyzing, resetApp]);
 
   return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>;
 }
